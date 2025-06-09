@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { web3Integration } from '../../lib/web3-integration';
 import { motion } from 'framer-motion';
-import { 
-  ChartBarIcon, 
-  UserGroupIcon, 
-  CheckBadgeIcon, 
+import {
+  ChartBarIcon,
+  UserGroupIcon,
+  CheckBadgeIcon,
   ClockIcon,
   UserIcon,
   MapPinIcon,
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
     const initWeb3 = async () => {
       const connected = await web3Integration.initialize();
       setIsConnected(connected);
-      
+
       if (connected) {
         setIsAdmin(web3Integration.isAdmin());
         loadStats();
@@ -54,7 +54,7 @@ export default function AdminDashboard() {
         setLoading(false);
       }
     };
-    
+
     setTimeout(() => {
       initWeb3();
     }, 800);
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
             Overview of the voting platform statistics
           </motion.p>
         </div>
-        
+
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
           </div>
         </motion.div>
       )}
-      
+
       {!isAdmin && isConnected && (
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -221,7 +221,7 @@ export default function AdminDashboard() {
                   <p className="text-lg font-semibold text-gray-700">{stats.totalVoters}</p>
                 </div>
               </motion.div>
-              
+
               {/* Card 2 - Verified Voters */}
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
@@ -235,14 +235,14 @@ export default function AdminDashboard() {
                 <div>
                   <p className="mb-2 text-sm font-medium text-gray-600">Verified Voters</p>
                   <p className="text-lg font-semibold text-gray-700">
-                    {stats.verifiedVoters} 
+                    {stats.verifiedVoters}
                     <span className="ml-2 text-sm font-normal text-green-500">
                       ({stats.verificationRate}%)
                     </span>
                   </p>
                 </div>
               </motion.div>
-              
+
               {/* Card 3 - Pending Verification */}
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
@@ -258,7 +258,7 @@ export default function AdminDashboard() {
                   <p className="text-lg font-semibold text-gray-700">{stats.pendingVerification}</p>
                 </div>
               </motion.div>
-              
+
               {/* Card 4 - Today's Activity */}
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
@@ -272,7 +272,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="mb-2 text-sm font-medium text-gray-600">Today's Activity</p>
                   <p className="text-lg font-semibold text-gray-700">
-                    <span className="text-blue-500">+{stats.todayRegistrations}</span> / 
+                    <span className="text-blue-500">+{stats.todayRegistrations}</span> /
                     <span className="text-green-500 ml-1">+{stats.todayVerifications}</span>
                   </p>
                   <p className="text-xs text-gray-500">Registrations / Verifications</p>
@@ -296,27 +296,27 @@ export default function AdminDashboard() {
                     Gender Distribution
                   </h2>
                 </div>
-                
+
                 <div className="flex flex-col">
                   {/* Male */}
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm font-medium text-gray-600">Male</span>
                       <span className="text-sm font-medium text-gray-800">
-                        {stats.genderDistribution.male} 
+                        {stats.genderDistribution.male}
                         <span className="text-gray-500 ml-1">
                           ({calculatePercentage(stats.genderDistribution.male, stats.totalVoters)}%)
                         </span>
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
+                      <div
                         className="bg-blue-600 h-2.5 rounded-full"
                         style={{ width: `${calculatePercentage(stats.genderDistribution.male, stats.totalVoters)}%` }}
                       ></div>
                     </div>
                   </div>
-                  
+
                   {/* Female */}
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-1">
@@ -329,13 +329,13 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
+                      <div
                         className="bg-pink-500 h-2.5 rounded-full"
                         style={{ width: `${calculatePercentage(stats.genderDistribution.female, stats.totalVoters)}%` }}
                       ></div>
                     </div>
                   </div>
-                  
+
                   {/* Other */}
                   <div>
                     <div className="flex justify-between items-center mb-1">
@@ -348,7 +348,7 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
+                      <div
                         className="bg-purple-500 h-2.5 rounded-full"
                         style={{ width: `${calculatePercentage(stats.genderDistribution.other, stats.totalVoters)}%` }}
                       ></div>
@@ -356,7 +356,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </motion.div>
-              
+
               {/* State Distribution */}
               <motion.div
                 initial={{ opacity: 0, y: 50, scale: 0.9 }}
@@ -370,7 +370,7 @@ export default function AdminDashboard() {
                     State Distribution
                   </h2>
                 </div>
-                
+
                 <div className="overflow-x-auto">
                   <table className="min-w-full">
                     <thead>
@@ -388,13 +388,12 @@ export default function AdminDashboard() {
                           <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">{state.total}</td>
                           <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">{state.verified}</td>
                           <td className="px-4 py-2 whitespace-nowrap text-sm">
-                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              state.verified / state.total >= 0.7 
-                                ? 'bg-green-100 text-green-800' 
-                                : state.verified / state.total >= 0.3 
-                                ? 'bg-yellow-100 text-yellow-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${state.verified / state.total >= 0.7
+                                ? 'bg-green-100 text-green-800'
+                                : state.verified / state.total >= 0.3
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
                               {((state.verified / state.total) * 100).toFixed(1)}%
                             </span>
                           </td>
@@ -423,7 +422,7 @@ export default function AdminDashboard() {
                 <p className="text-gray-500 text-sm">Approve new voter registrations</p>
               </div>
             </Link>
-            
+
             <Link href="/admin/schedule-elections" className="bg-white p-4 rounded-lg shadow-card transition-all duration-300 hover:shadow-card-hover flex items-center">
               <div className="rounded-full p-3 bg-purple-100 text-purple-600 mr-4">
                 <CalendarDaysIcon className="h-6 w-6" />
@@ -433,7 +432,7 @@ export default function AdminDashboard() {
                 <p className="text-gray-500 text-sm">Create and manage elections</p>
               </div>
             </Link>
-            
+
             <Link href="/admin/logs" className="bg-white p-4 rounded-lg shadow-card transition-all duration-300 hover:shadow-card-hover flex items-center">
               <div className="rounded-full p-3 bg-amber-100 text-amber-600 mr-4">
                 <ChartBarIcon className="h-6 w-6" />
