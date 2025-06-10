@@ -10,7 +10,7 @@ class Web3IntegrationService {
   private currentAddress: string | null = null;
   private readonly ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_ADDRESS || '0x6E5ceE75158A189939F6d945351dBD86370672AD';
   private readonly DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
-  
+
   /**
    * Initialize both web3 and API services
    * Set the current user address for blockchain interactions
@@ -20,20 +20,20 @@ class Web3IntegrationService {
     try {
       // Initialize web3 connection
       const connected = await web3Service.initialize();
-      
+
       if (connected && web3Service.signer) {
         // Get the current address
         this.currentAddress = await web3Service.signer.getAddress();
-        
+
         // Always use the admin address from environment variable for API calls
         apiService.setAdminAddress(this.ADMIN_ADDRESS);
-        
+
         // Check health of the API
         await this.checkApiHealth();
-        
+
         return true;
       }
-      
+
       return false;
     } catch (error) {
       console.error('Error initializing integration service:', error);
@@ -41,7 +41,7 @@ class Web3IntegrationService {
       return false;
     }
   }
-  
+
   /**
    * Check if the current address is an admin
    * In dev mode, any connected address is admin
@@ -53,7 +53,7 @@ class Web3IntegrationService {
     }
     return this.currentAddress?.toLowerCase() === this.ADMIN_ADDRESS.toLowerCase();
   }
-  
+
   /**
    * Check the health of the API
    */
@@ -66,7 +66,7 @@ class Web3IntegrationService {
       return false;
     }
   }
-  
+
   /**
    * Register a new voter
    * This function will handle both blockchain and API operations
@@ -87,13 +87,13 @@ class Web3IntegrationService {
         toast.error('Wallet not connected');
         return false;
       }
-      
+
       // Register voter through API
       const result = await apiService.registerVoter({
         ...data,
         address: this.currentAddress,
       });
-      
+
       if (result.onBlockchain) {
         toast.success('Voter registered successfully on blockchain and database');
         return true;
@@ -107,7 +107,7 @@ class Web3IntegrationService {
       return false;
     }
   }
-  
+
   /**
    * Verify a voter (admin only)
    */
@@ -115,14 +115,14 @@ class Web3IntegrationService {
     try {
       // Always use the admin address from environment variable
       apiService.setAdminAddress(this.ADMIN_ADDRESS);
-      
+
       // Check if web3 is initialized, if not, skip blockchain verification
       let blockchainResult = true;
       if (web3Service.contract) {
         // Try blockchain verification
         try {
           blockchainResult = await web3Service.verifyUser(voterAddress);
-          
+
           if (!blockchainResult) {
             console.warn('Blockchain verification failed');
             // We'll continue and just update the API
@@ -134,10 +134,10 @@ class Web3IntegrationService {
       } else {
         console.warn('Blockchain contract not initialized, proceeding with API verification only');
       }
-      
+
       // Then update the API with the proper admin address in headers
       const apiResult = await apiService.verifyVoter(voterAddress, notes);
-      
+
       if (apiResult && apiResult.message) {
         toast.success(apiResult.message || 'Voter verified successfully');
         return true;
@@ -151,7 +151,7 @@ class Web3IntegrationService {
       return false;
     }
   }
-  
+
   /**
    * Schedule an election (admin only)
    */
@@ -159,10 +159,10 @@ class Web3IntegrationService {
     try {
       // Always use the admin address from environment variable
       apiService.setAdminAddress(this.ADMIN_ADDRESS);
-      
+
       // Schedule on blockchain
       const result = await web3Service.scheduleElection(name, startTime, endTime);
-      
+
       if (result) {
         toast.success('Election scheduled successfully');
         return true;
@@ -176,7 +176,7 @@ class Web3IntegrationService {
       return false;
     }
   }
-  
+
   /**
    * Add a candidate to an election (admin only)
    */
@@ -184,10 +184,10 @@ class Web3IntegrationService {
     try {
       // Always use the admin address from environment variable
       apiService.setAdminAddress(this.ADMIN_ADDRESS);
-      
+
       // Add candidate on blockchain
       const result = await web3Service.addCandidate(electionId, name, info);
-      
+
       if (result) {
         toast.success('Candidate added successfully');
         return true;
@@ -201,21 +201,21 @@ class Web3IntegrationService {
       return false;
     }
   }
-  
+
   /**
    * Get all elections
    */
   async getElections() {
     return await web3Service.getElections();
   }
-  
+
   /**
    * Get candidates for an election
    */
   async getCandidates(electionId: number) {
     return await web3Service.getCandidates(electionId);
   }
-  
+
   /**
    * Get admin dashboard statistics
    */
@@ -224,7 +224,7 @@ class Web3IntegrationService {
       // Remove the isUserAdmin check, as we want to use the admin address directly
       // Instead, ensure the admin address is set for this API call
       apiService.setAdminAddress(this.ADMIN_ADDRESS);
-      
+
       return await apiService.getAdminStats();
     } catch (error) {
       console.error('Error getting admin stats:', error);
@@ -232,7 +232,7 @@ class Web3IntegrationService {
       throw error;
     }
   }
-  
+
   /**
    * List all voters (admin only)
    */
@@ -241,7 +241,7 @@ class Web3IntegrationService {
       // Remove the isUserAdmin check, as we want to use the admin address directly
       // Instead, ensure the admin address is set for this API call
       apiService.setAdminAddress(this.ADMIN_ADDRESS);
-      
+
       return await apiService.listVoters(options);
     } catch (error) {
       console.error('Error listing voters:', error);
@@ -249,7 +249,7 @@ class Web3IntegrationService {
       throw error;
     }
   }
-  
+
   /**
    * Get admin logs (admin only)
    */
@@ -257,7 +257,7 @@ class Web3IntegrationService {
     try {
       // Ensure the admin address is set for API calls
       apiService.setAdminAddress(this.ADMIN_ADDRESS);
-      
+
       return await apiService.getAdminLogs(options);
     } catch (error) {
       console.error('Error getting admin logs:', error);
@@ -265,28 +265,28 @@ class Web3IntegrationService {
       throw error;
     }
   }
-  
+
   /**
    * Get the current user's address
    */
   getCurrentAddress(): string | null {
     return this.currentAddress;
   }
-  
+
   /**
    * Get the admin address
    */
   getAdminAddress(): string {
     return this.DEV_MODE && this.currentAddress ? this.currentAddress : this.ADMIN_ADDRESS;
   }
-  
+
   /**
    * Check if the current user is an admin
    */
   isAdmin(): boolean {
     return this.isUserAdmin();
   }
-  
+
   /**
    * Get development mode status
    */

@@ -1,5 +1,9 @@
 'use client';
 
+import SignOutButton from '@/Components/SignOutButton';
+import { useRouter } from 'next/navigation';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 import { useEffect, useState } from 'react';
 import { web3Integration } from '../lib/web3-integration';
 import Link from 'next/link';
@@ -12,6 +16,7 @@ type User = {
   id: string;
   name: string;
   isVerified: boolean;
+  voter: any
 };
 
 export default function AdminDashboard() {
@@ -21,12 +26,32 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentAddress, setCurrentAddress] = useState<string | null>(null);
-  
+  const [user, setUser] = useState(true);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(true);
+      } else {
+        setUser(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/');
+    }
+  }, [user, router]);
+
   useEffect(() => {
     const initWeb3 = async () => {
       const connected = await web3Integration.initialize();
       setIsConnected(connected);
-      
+
       if (connected) {
         setIsAdmin(web3Integration.isAdmin());
         setCurrentAddress(web3Integration.getCurrentAddress());
@@ -35,23 +60,23 @@ export default function AdminDashboard() {
         setLoading(false);
       }
     };
-    
+
     setTimeout(() => {
       initWeb3();
     }, 800);
   }, []);
-  
+
   const loadDashboardData = async () => {
     // Load elections
     const electionsData = await web3Integration.getElections();
     setElections(electionsData);
-    
+
     // Load users
     const usersData = await web3Integration.listVoters({
       page: 1,
       limit: 5
     });
-    
+
     if (usersData?.data) {
       setPendingUsers(usersData.data.map(voter => ({
         id: voter.blockchainAddress,
@@ -59,10 +84,10 @@ export default function AdminDashboard() {
         isVerified: voter.isVerified
       })));
     }
-    
+
     setLoading(false);
   };
-  
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString();
   };
@@ -119,6 +144,9 @@ export default function AdminDashboard() {
       transition={{ duration: 0.5 }}
       className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10"
     >
+      <div className="flex justify-end mb-6">
+        <SignOutButton />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -166,7 +194,7 @@ export default function AdminDashboard() {
               </div>
             </motion.div>
           )}
-          
+
           {isConnected && !isAdmin && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -191,7 +219,7 @@ export default function AdminDashboard() {
               </div>
             </motion.div>
           )}
-          
+
           {isConnected && isAdmin && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -232,7 +260,7 @@ export default function AdminDashboard() {
               </motion.div>
             ))}
           </div>
-          
+
           {web3Integration.isDevMode() && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -266,15 +294,15 @@ export default function AdminDashboard() {
 // Animation components
 function CountAnimation({ value }: { value: number }) {
   const [count, setCount] = useState(0);
-  
+
   useEffect(() => {
     if (value === 0) return;
-    
+
     let start = 0;
     const end = value;
     const duration = 1000;
     const increment = Math.ceil(end / (duration / 16));
-    
+
     const timer = setInterval(() => {
       start += increment;
       if (start > end) {
@@ -284,11 +312,9 @@ function CountAnimation({ value }: { value: number }) {
         setCount(start);
       }
     }, 16);
-    
+
     return () => clearInterval(timer);
   }, [value]);
-  
+
   return <>{count}</>;
 }
-
-import { UserPlusIcon, CheckIcon } from '@heroicons/react/24/outline'; 
