@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { signInWithPhoneNumber, RecaptchaVerifier, ConfirmationResult } from 'firebase/auth'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { auth } from '../lib/firebase'
@@ -14,34 +14,76 @@ const SignInWithPhone = () => {
     const [loading, setLoading] = useState(false);
     const [otpSent, setOtpSent] = useState(false);
 
+    const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+
+    useEffect(() => {
+        // Initialize reCAPTCHA only once
+        const initializeRecaptcha = () => {
+            if (!recaptchaVerifierRef.current) {
+                // Check if DOM element exists
+                const recaptchaContainer = document.getElementById('recaptcha');
+                if (!recaptchaContainer) {
+                    console.error('Recaptcha container not found');
+                    return;
+                }
+
+                recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha', {
+                    'size': 'invisible',
+                    'callback': () => {
+                        console.log('reCAPTCHA verified');
+                    }
+                });
+            }
+        };
+
+        initializeRecaptcha();
+
+        // Cleanup on unmount only
+        return () => {
+            if (recaptchaVerifierRef.current) {
+                recaptchaVerifierRef.current.clear();
+                recaptchaVerifierRef.current = null;
+            }
+        };
+    }, []); // Empty dependency array - initialize only once
+
+    // Separate effect for auto-sending OTP
+    useEffect(() => {
+        if (phoneNumber && phoneNumber !== '+91null' && !otpSent && recaptchaVerifierRef.current) {
+            sendOTP();
+        }
+    }, [phoneNumber, otpSent]); // Dependencies for OTP sending logic
+
     const sendOTP = async () => {
+        if (!recaptchaVerifierRef.current || otpSent) return;
+
         try {
             setLoading(true);
-            const recaptcha = new RecaptchaVerifier(auth, 'recaptcha', {
-                'size': 'invisible',
-            });
-            const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptcha);
+            const confirmationResult = await signInWithPhoneNumber(
+                auth,
+                phoneNumber,
+                recaptchaVerifierRef.current
+            );
             setUser(confirmationResult);
             setOtpSent(true);
         } catch (error) {
             console.error('Error sending OTP:', error);
             alert('Error sending OTP. Please try again.');
+
+            // Reset recaptcha on error
+            if (recaptchaVerifierRef.current) {
+                recaptchaVerifierRef.current.clear();
+                recaptchaVerifierRef.current = null;
+            }
         } finally {
             setLoading(false);
         }
-    }
-
-    useEffect(() => {
-        if (phoneNumber && phoneNumber !== '+91null') {
-            sendOTP();
-        }
-    }, [phoneNumber]);
-
+    };
     const verifyOTP = async (otpValue: string) => {
+        if (!user) return;
+
         try {
             setLoading(true);
-            if (!user) return;
-
             const userCredential = await user.confirm(otpValue);
             console.log('User signed in:', userCredential.user);
             router.push('/admin');
@@ -100,7 +142,6 @@ const SignInWithPhone = () => {
                 </div>
             </div>
 
-            {/* Required for reCAPTCHA */}
             <div id="recaptcha"></div>
         </div>
     )
